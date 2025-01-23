@@ -6,7 +6,7 @@ const RegistrationScreen = ({ navigation }) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!email || !password || !confirmPassword) {
       Alert.alert("Error", "Please fill in all fields.");
       return;
@@ -17,12 +17,30 @@ const RegistrationScreen = ({ navigation }) => {
       return;
     }
 
-    // Add your registration logic here (e.g., API call or Firebase Auth)
-    console.log("Registering user with email:", email);
+    try {
+      const response = await fetch(
+        "http://192.168.1.139:5000/api/users/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        }
+      );
 
-    // Navigate back to the Login screen after registration
-    Alert.alert("Success", "Registration successful!");
-    navigation.navigate("Login");
+      const data = await response.json();
+
+      if (response.ok) {
+        Alert.alert("Success", "Registration successful!");
+        navigation.navigate("Login");
+      } else {
+        Alert.alert("Registration Failed", data.message);
+      }
+    } catch (error) {
+      console.error("Error during registration:", error);
+      Alert.alert("Error", "Something went wrong during registration.");
+    }
   };
 
   return (

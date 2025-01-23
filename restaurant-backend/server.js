@@ -5,7 +5,6 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
-
 const app = express();
 const restaurantRoutes = require("./routes/restaurantRoutes");
 const userRoutes = require('./routes/userRoutes');

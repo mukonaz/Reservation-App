@@ -1,14 +1,40 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, StyleSheet, Button } from "react-native";
+import { View, Text, TextInput, StyleSheet, Button, Alert } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = () => {
-    // Replace this with your authentication logic
-    console.log("Logging in with:", email, password);
-    navigation.navigate("Home");
+  const handleLogin = async () => {
+    try {
+      const response = await fetch(
+        "http://192.168.1.139:5000/api/users/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        }
+      );
+      const data = await response.json();
+      if (response.ok) {
+        console.log("Login successful:", data);
+        // Store token for authenticated user in AsyncStorage
+        await AsyncStorage.setItem("userToken", data.token);
+        // Navigate back to Home or reset navigation stack
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Home" }],
+        });
+      } else {
+        Alert.alert("Login Failed", data.message);
+      }
+    } catch (error) {
+      console.error("Error during login:", error);
+      Alert.alert("Error", "Something went wrong during login.");
+    }
   };
 
   return (
@@ -20,6 +46,7 @@ const LoginScreen = ({ navigation }) => {
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
+        autoCapitalize="none"
       />
       <TextInput
         style={styles.input}
