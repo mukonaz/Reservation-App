@@ -6,9 +6,12 @@ const bodyParser = require("body-parser");
 const Stripe = require("stripe");
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const app = express();
+
 const restaurantRoutes = require("./routes/restaurantRoutes");
 const userRoutes = require('./routes/userRoutes');
 const reservationRoutes = require('./routes/reservationRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+
 
 // Middleware
 app.use(cors());
@@ -24,6 +27,7 @@ mongoose
 app.use("/api/restaurants", restaurantRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/reservations', reservationRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Stripe Payment Intent
 app.post("/api/", async (req, res) => {

@@ -5,14 +5,15 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   name: { type: String },
-  phone: { type: String },
-  resetPasswordToken: String,
-  resetPasswordExpires: Date,
-  preferences: {
-    cuisinePreferences: [String],
-    preferredLocations: [String],
-    dietaryRestrictions: [String]
-  }
+  role: { 
+    type: String, 
+    enum: ['user', 'admin', 'restaurant_admin'], 
+    default: 'user' 
+  },
+  managedRestaurants: [{ 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'Restaurant' 
+  }]
 }, { timestamps: true });
 
 userSchema.pre("save", async function (next) {
