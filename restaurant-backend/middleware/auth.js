@@ -16,4 +16,12 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
+const checkAdminAccess = async (req, res, next) => {
+  const user = await User.findById(req.user.id);
+  if (user.role !== 'admin' && user.role !== 'restaurant_admin') {
+    return res.status(403).json({ message: "Access denied" });
+  }
+  next();
+};
+
 module.exports = authMiddleware;

@@ -19,4 +19,5 @@ router.post('/reset-password', resetPassword);
 router.get('/profile', authMiddleware, getUserProfile);
 router.put('/profile', authMiddleware, updateUserProfile);
 
+
 module.exports = router;

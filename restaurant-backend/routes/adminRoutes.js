@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
 const authMiddleware = require('../middleware/auth');
+const User = require('../models/User');
 
 // Middleware to check if user is an admin or restaurant admin
 const checkAdminAccess = async (req, res, next) => {
