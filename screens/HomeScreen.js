@@ -1,14 +1,34 @@
-import React from "react";
-import { View, Text, StyleSheet, FlatList, TextInput, Image } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TextInput,
+  Image,
+  TouchableOpacity,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { getRestaurants } from "../services/api"; // Import the API service
 
 const HomeScreen = () => {
-  const restaurants = [
-    { id: "1", name: "Ocean's Dine", location: "New York", cuisine: "Seafood" },
-    { id: "2", name: "Taste of Italy", location: "Rome", cuisine: "Italian" },
-    { id: "3", name: "Spice Hub", location: "Delhi", cuisine: "Indian" },
-  ];
+  const [restaurants, setRestaurants] = useState([]);
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    // Fetch restaurants from the backend
+    const fetchRestaurants = async () => {
+      try {
+        const response = await getRestaurants();
+        setRestaurants(response.data);
+      } catch (error) {
+        console.error("Error fetching restaurants:", error);
+      }
+    };
+
+    fetchRestaurants();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -20,7 +40,12 @@ const HomeScreen = () => {
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
+        <Ionicons
+          name="search"
+          size={20}
+          color="#888"
+          style={styles.searchIcon}
+        />
         <TextInput
           style={styles.searchInput}
           placeholder="Search restaurants..."
@@ -30,20 +55,25 @@ const HomeScreen = () => {
 
       {/* Restaurant List */}
       <FlatList
-      onPress={() => navigation.navigate("Details", { restaurant: item })}
         data={restaurants}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Image
-              source={{ uri: "https://via.placeholder.com/100" }}
-              style={styles.image}
-            />
-            <View style={styles.info}>
-              <Text style={styles.name}>{item.name}</Text>
-              <Text style={styles.details}>{item.location} • {item.cuisine}</Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Details", { restaurant: item })}
+          >
+            <View style={styles.card}>
+              <Image
+                source={{ uri: "https://via.placeholder.com/100" }}
+                style={styles.image}
+              />
+              <View style={styles.info}>
+                <Text style={styles.name}>{item.name}</Text>
+                <Text style={styles.details}>
+                  {item.location} • {item.cuisine}
+                </Text>
+              </View>
             </View>
-          </View>
+          </TouchableOpacity>
         )}
       />
     </View>

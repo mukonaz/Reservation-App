@@ -19,7 +19,7 @@ const RegistrationScreen = ({ navigation }) => {
 
     try {
       const response = await fetch(
-        "http://192.168.1.139:5000/api/users/register",
+        "http://192.168.1.229:5000/api/users/register",
         {
           method: "POST",
           headers: {

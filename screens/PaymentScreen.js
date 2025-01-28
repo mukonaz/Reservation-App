@@ -15,14 +15,17 @@ const PaymentScreen = () => {
 
     try {
       // Call backend to create payment intent
-      const response = await fetch("http://localhost:5000/create-payment-intent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: Math.round(amount * 100), // Convert to smallest currency unit
-          currency: "usd",
-        }),
-      });
+      const response = await fetch(
+        "http://192.168.1.229/create-payment-intent",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: Math.round(amount * 100), // Convert to smallest currency unit
+            currency: "usd",
+          }),
+        }
+      );
 
       const { clientSecret } = await response.json();
 

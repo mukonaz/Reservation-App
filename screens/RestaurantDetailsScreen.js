@@ -4,15 +4,16 @@ import {
   Text,
   StyleSheet,
   Image,
-  Button,
   TextInput,
   TouchableOpacity,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import Toast from "react-native-toast-message";
+import { useNavigation } from "@react-navigation/native";
 
 const RestaurantDetailsScreen = ({ route }) => {
+  const navigation = useNavigation();
   const { restaurant } = route.params;
   const [date, setDate] = useState(null);
   const [guestCount, setGuestCount] = useState(1);
@@ -23,13 +24,13 @@ const RestaurantDetailsScreen = ({ route }) => {
       Toast.show({ type: "error", text1: "Please complete all fields!" });
       return;
     }
-    // Mock reservation submission
-    console.log("Reservation Details:", {
-      restaurant: restaurant.name,
+
+    // Navigate to ReservationForm screen with reservation details
+    navigation.navigate("ReservationForm", {
+      restaurantId: restaurant.id,
       date,
       guestCount,
     });
-    Toast.show({ type: "success", text1: "Reservation Confirmed!" });
   };
 
   return (

@@ -11,20 +11,32 @@ import ProfileScreen from "./screens/ProfileScreen";
 import AdminDashboardScreen from "./screens/AdminDashboardScreen";
 import PaymentScreen from "./screens/PaymentScreen";
 import RegistrationScreen from "./screens/RegistrationScreen";
+import ReservationForm from "./screens/ReservationForm";
+import ConfirmationScreen from "./screens/ConfirmationScreen";
+import ErrorScreen from "./screens/ErrorScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
+// Home Stack
 function HomeStack() {
   return (
     <Stack.Navigator initialRouteName="Home">
-      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ headerShown: false }} // Hide the header for the Home screen
+      />
       <Stack.Screen name="Details" component={RestaurantDetailsScreen} />
+      <Stack.Screen name="ReservationForm" component={ReservationForm} />
+      <Stack.Screen name="Confirmation" component={ConfirmationScreen} />
+      <Stack.Screen name="Error" component={ErrorScreen} />
       <Stack.Screen name="Payment" component={PaymentScreen} />
     </Stack.Navigator>
   );
 }
 
+// Auth Stack
 function AuthStack() {
   return (
     <Stack.Navigator
@@ -37,9 +49,10 @@ function AuthStack() {
   );
 }
 
+// Main App
 export default function App() {
   return (
-    <StripeProvider publishableKey="your-publishable-key">
+    <StripeProvider publishableKey="pk_test_51Q9ih1RuIWNyWIUihRX8W86PxHIYUxOfPoJ4KQubbplNkx6uljtZQHAMATIRVx6sOciRKO8W42Lwsr2dapCIZ5el00xFTr7iub">
       <NavigationContainer>
         <Tab.Navigator
           screenOptions={({ route }) => ({

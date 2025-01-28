@@ -1,3 +1,4 @@
+
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
@@ -8,10 +9,9 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const app = express();
 
 const restaurantRoutes = require("./routes/restaurantRoutes");
-const userRoutes = require('./routes/userRoutes');
-const reservationRoutes = require('./routes/reservationRoutes');
-const adminRoutes = require('./routes/adminRoutes');
-
+const userRoutes = require("./routes/userRoutes");
+const reservationRoutes = require("./routes/reservationRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 // Middleware
 app.use(cors());
@@ -25,12 +25,12 @@ mongoose
 
 // Routes
 app.use("/api/restaurants", restaurantRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/reservations', reservationRoutes);
-app.use('/api/admin', adminRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/reservations", reservationRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Stripe Payment Intent
-app.post("/api/", async (req, res) => {
+app.post("/api/create-payment-intent", async (req, res) => {
   try {
     const { amount, currency } = req.body;
     const paymentIntent = await stripe.paymentIntents.create({
@@ -38,7 +38,7 @@ app.post("/api/", async (req, res) => {
       currency,
       automatic_payment_methods: { enabled: true },
     });
-    
+
     res.json({ clientSecret: paymentIntent.client_secret });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -52,5 +52,5 @@ app.get("/", (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on http://:${PORT}`);
 });
