@@ -14,6 +14,7 @@ import RegistrationScreen from "./screens/RegistrationScreen";
 import ReservationForm from "./screens/ReservationForm";
 import ConfirmationScreen from "./screens/ConfirmationScreen";
 import ErrorScreen from "./screens/ErrorScreen";
+import AddRestaurantScreen from "./screens/AddRestaurantScreen"; 
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -45,6 +46,24 @@ function AuthStack() {
     >
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegistrationScreen} />
+    </Stack.Navigator>
+  );
+}
+
+// Admin Stack
+function AdminStack() {
+  return (
+    <Stack.Navigator initialRouteName="AdminDashboard">
+      <Stack.Screen
+        name="AdminDashboard"
+        component={AdminDashboardScreen}
+        options={{ title: "Admin Dashboard" }}
+      />
+      <Stack.Screen
+        name="AddRestaurant"
+        component={AddRestaurantScreen}
+        options={{ title: "Add Restaurant" }}
+      />
     </Stack.Navigator>
   );
 }
@@ -81,7 +100,7 @@ export default function App() {
             options={{ title: "Login" }}
           />
           <Tab.Screen name="Profile" component={ProfileScreen} />
-          <Tab.Screen name="Admin" component={AdminDashboardScreen} />
+          <Tab.Screen name="Admin" component={AdminStack} />
         </Tab.Navigator>
       </NavigationContainer>
     </StripeProvider>

@@ -16,7 +16,7 @@ const PaymentScreen = () => {
     try {
       // Call backend to create payment intent
       const response = await fetch(
-        "http://192.168.1.229/create-payment-intent",
+        "http://192.168.1.132/create-payment-intent",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

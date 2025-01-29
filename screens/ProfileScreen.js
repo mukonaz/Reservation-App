@@ -32,7 +32,7 @@ const ProfileScreen = () => {
         }
 
         const response = await fetch(
-          "http://192.168.1.229:5000/api/users/profile",
+          "http://192.168.1.132:5000/api/users/profile",
           {
             method: "GET",
             headers: {
