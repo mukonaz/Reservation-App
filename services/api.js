@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const API = axios.create({ baseURL: "http://192.168.1.87:5000" });
-const API_URL = "http://192.168.1.87:5000/api/restaurants"; // Replace w
+const API = axios.create({ baseURL: "http://192.168.0.130:5000" });
+const API_URL = "http://192.168.0.130:5000/api/restaurants"; // Replace w
 export const loginUser = (data) => API.post('/users/login', data);
 export const registerUser = (data) => API.post('/users/register', data);
 export const getRestaurants = async () => {
@@ -16,7 +16,7 @@ export const getRestaurants = async () => {
 
 export const makeReservation = async ({ restaurantId, date, guestCount }) => {
   try {
-    const response = await fetch("http://192.168.1.87:5000/api/reservations", {
+    const response = await fetch("http://192.168.0.130:5000/api/reservations", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

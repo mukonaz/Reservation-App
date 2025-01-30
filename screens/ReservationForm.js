@@ -9,71 +9,151 @@ import {
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ScrollView,
 } from "react-native";
-import { makeReservation } from "../services/api";
 import { CardField, useStripe } from "@stripe/stripe-react-native";
 
 const ReservationForm = ({ route, navigation }) => {
-  const { restaurantId, date, guestCount } = route.params;
+  const { restaurantId, date, guestCount, restaurantName } = route.params;
   const [name, setName] = useState("");
-  const [cardDetails, setCardDetails] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [cardComplete, setCardComplete] = useState(false);
   const { confirmPayment } = useStripe();
 
+  const handleCardChange = (cardDetails) => {
+    if (cardDetails) {
+      setCardComplete(cardDetails.complete);
+      console.log("Card details changed:", cardDetails.complete);
+    }
+  };
+
+  const handleScreenPress = () => {
+    if (Platform.OS === "ios" || Platform.OS === "android") {
+      Keyboard.dismiss();
+    }
+  };
+
   const handleSubmit = async () => {
+    if (!name.trim()) {
+      Alert.alert("Error", "Please enter cardholder name");
+      return;
+    }
+
+    if (!cardComplete) {
+      Alert.alert("Error", "Please enter valid card details");
+      return;
+    }
+
     try {
-      const { clientSecret, reservation } = await makeReservation({
+      setLoading(true);
+
+      const requestPayload = {
         restaurantId,
         date,
         guestCount,
-      });
+        customerName: name,
+      };
+      console.log('Request payload:', requestPayload);
 
-      const { paymentIntent, error } = await confirmPayment(clientSecret, {
-        type: "Card",
-        billingDetails: { name },
+      const reservationResponse = await fetch(
+        "http://192.168.0.130:5000/api/reservations/create",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestPayload),
+        }
+      );
+
+      const reservationData = await reservationResponse.json();
+
+      if (!reservationResponse.ok) {
+        throw new Error(reservationData.message || 'Server returned error status');
+      }
+
+      const { clientSecret, reservationId } = reservationData;
+
+      if (!clientSecret) {
+        throw new Error("Server did not provide a client secret");
+      }
+
+      const { error, paymentIntent } = await confirmPayment(clientSecret, {
+        paymentMethodType: "Card",
+        paymentMethodData: {
+          billingDetails: {
+            name,
+          },
+        },
       });
 
       if (error) {
-        navigation.navigate("Error", { message: error.message });
-      } else if (paymentIntent) {
-        navigation.navigate("Confirmation", {
-          restaurantId,
-          date,
-          reservationNumber: paymentIntent.id,
-          reservationId: reservation._id,
-        });
+        console.error('Stripe error:', error);
+        throw new Error(error.message);
       }
+
+      navigation.navigate("Confirmation", {
+        reservationId,
+      });
+
     } catch (error) {
-      navigation.navigate("Error", { message: error.message });
+      console.error("Full error details:", error);
+      Alert.alert(
+        "Payment Failed",
+        error.message || "There was an error processing your payment"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <TouchableWithoutFeedback onPress={handleScreenPress}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
       >
-        <View style={styles.header}>
-          <Button title="Back" onPress={() => navigation.goBack()} />
-        </View>
-        <View>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.form}
+        >
+          <Text style={styles.sectionTitle}>Reservation Details</Text>
+          <Text style={styles.detail}>Restaurant: {restaurantName}</Text>
+          <Text style={styles.detail}>Date: {new Date(date).toLocaleString()}</Text>
+          <Text style={styles.detail}>Guests: {guestCount}</Text>
+
           <Text style={styles.label}>Cardholder Name:</Text>
           <TextInput
             style={styles.input}
             placeholder="John Doe"
             value={name}
             onChangeText={setName}
+            editable={!loading}
           />
+
           <Text style={styles.label}>Card Details:</Text>
           <CardField
-            postalCodeEnabled={false}
-            placeholder={{ number: "4242 4242 4242 4242" }}
+            postalCodeEnabled={true}
+            placeholder={{
+              number: "4242 4242 4242 4242",
+            }}
             cardStyle={styles.card}
             style={styles.cardContainer}
-            onCardChange={(cardDetails) => setCardDetails(cardDetails)}
+            onCardChange={handleCardChange}
+            disabled={loading}
           />
-          <Button title="Pay Now" onPress={handleSubmit} />
-        </View>
+
+          <Button
+            title={loading ? "Processing..." : "Pay Now"}
+            onPress={handleSubmit}
+            disabled={loading || !cardComplete || !name.trim()}
+          />
+
+          <Text style={styles.cardStatus}>
+            {cardComplete ? "✓ Card details complete" : "Enter card details"}
+          </Text>
+        </ScrollView>
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );
@@ -83,13 +163,27 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    backgroundColor: '#fff',
   },
-  header: {
-    marginBottom: 20,
+  form: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 15,
+  },
+  detail: {
+    fontSize: 16,
+    marginBottom: 8,
+    color: '#666',
   },
   label: {
     fontSize: 16,
     marginBottom: 10,
+    fontWeight: "500",
+    marginTop: 15,
   },
   input: {
     borderWidth: 1,
@@ -97,14 +191,21 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     marginBottom: 20,
+    fontSize: 16,
   },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: "#efefefef",
+    textColor: "#000000",
   },
   cardContainer: {
     height: 50,
     marginBottom: 20,
   },
+  cardStatus: {
+    textAlign: 'center',
+    marginTop: 10,
+    color: '#666',
+  }
 });
 
 export default ReservationForm;

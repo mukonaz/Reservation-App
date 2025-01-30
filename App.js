@@ -17,6 +17,7 @@ import ReservationForm from "./screens/ReservationForm";
 import ConfirmationScreen from "./screens/ConfirmationScreen";
 import ErrorScreen from "./screens/ErrorScreen";
 import AddRestaurantScreen from "./screens/AddRestaurantScreen";
+import ReservationListScreen from "./screens/RestaurantList";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -55,6 +56,11 @@ function AdminStack() {
     <Stack.Navigator initialRouteName="AdminDashboard">
       <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} options={{ title: "Admin Dashboard" }} />
       <Stack.Screen name="AddRestaurant" component={AddRestaurantScreen} options={{ title: "Add Restaurant" }} />
+      <Stack.Screen 
+        name="ReservationList" 
+        component={ReservationListScreen} 
+        options={{ title: "Reservations" }} 
+      />
     </Stack.Navigator>
   );
 }

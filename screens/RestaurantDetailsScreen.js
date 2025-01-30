@@ -25,11 +25,15 @@ const RestaurantDetailsScreen = ({ route }) => {
       return;
     }
 
-    // Navigate to ReservationForm screen with reservation details
+    // Log the restaurant object to verify the data
+    console.log('Restaurant data:', restaurant);
+
+    // Use _id instead of id for consistency with MongoDB
     navigation.navigate("ReservationForm", {
-      restaurantId: restaurant.id,
+      restaurantId: restaurant._id, // Changed from restaurant.id to restaurant._id
       date,
       guestCount,
+      restaurantName: restaurant.name // Adding restaurant name for reference
     });
   };
 
@@ -68,6 +72,7 @@ const RestaurantDetailsScreen = ({ route }) => {
               setShowDatePicker(false);
               if (selectedDate) setDate(selectedDate);
             }}
+            minimumDate={new Date()} // Prevent past dates
           />
         )}
         <Text style={styles.label}>Number of Guests:</Text>
@@ -77,10 +82,23 @@ const RestaurantDetailsScreen = ({ route }) => {
             style={styles.input}
             keyboardType="numeric"
             value={guestCount.toString()}
-            onChangeText={(value) => setGuestCount(Number(value))}
+            onChangeText={(value) => {
+              const number = parseInt(value);
+              if (!isNaN(number) && number > 0) {
+                setGuestCount(number);
+              }
+            }}
+            maxLength={2} // Prevent unreasonably large numbers
           />
         </View>
-        <TouchableOpacity style={styles.button} onPress={handleReservation}>
+        <TouchableOpacity 
+          style={[
+            styles.button,
+            (!date || guestCount < 1) && styles.buttonDisabled
+          ]} 
+          onPress={handleReservation}
+          disabled={!date || guestCount < 1}
+        >
           <Icon name="check-circle" size={20} color="#fff" />
           <Text style={styles.buttonText}>Reserve Now</Text>
         </TouchableOpacity>
@@ -138,15 +156,19 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
+    marginLeft: 10,
   },
   button: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#007BFF",
-    padding: 10,
+    padding: 15,
     borderRadius: 8,
     marginBottom: 15,
+  },
+  buttonDisabled: {
+    backgroundColor: "#cccccc",
   },
   buttonText: {
     color: "#fff",

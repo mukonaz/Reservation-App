@@ -5,38 +5,44 @@ exports.createReservation = async (req, res) => {
     const { restaurantId, date, guestCount } = req.body;
     const userId = req.user.id;
 
+    // Calculate amount to charge based on guestCount (e.g., $10 per guest)
+    const amount = guestCount * 1000; // Example: $10 per guest in cents
+
     // Create a payment intent with Stripe
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: guestCount * 1000, // Example: $10 per guest
-      currency: "usd",
-      automatic_payment_methods: { enabled: true },
+      amount, // Payment amount in cents
+      currency: "usd", // Currency code
+      automatic_payment_methods: { enabled: true }, // Automatic payment methods
     });
 
-    // Create a reservation
+    // Create a reservation in the database
     const reservation = new Reservation({
       user: userId,
       restaurant: restaurantId,
       date: new Date(date),
       guestCount,
-      paymentIntentId: paymentIntent.id,
+      paymentIntentId: paymentIntent.id, // Store the Stripe payment intent ID
     });
 
     await reservation.save();
 
-    // Populate restaurant details for the response
+    // Populate restaurant details to include in the response
     const populatedReservation = await reservation.populate("restaurant");
 
+    // Return the reservation along with the clientSecret from Stripe
     res.status(201).json({
       message: "Reservation created successfully",
       reservation: populatedReservation,
-      clientSecret: paymentIntent.client_secret,
+      clientSecret: paymentIntent.client_secret, // Provide the client secret for Stripe payment confirmation
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error creating reservation", error: error.message });
+    res.status(500).json({
+      message: "Error creating reservation",
+      error: error.message,
+    });
   }
 };
+
 
 exports.getUserReservations = async (req, res) => {
   try {
@@ -51,26 +57,26 @@ exports.getUserReservations = async (req, res) => {
   }
 };
 
-// Combine `makeReservation` logic into a single function
-exports.makeReservation = async ({ restaurantId, date, guestCount }) => {
-  try {
-    const response = await fetch("/api/create-payment-intent", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        amount: guestCount * 1000, // Example: $10 per guest
-        currency: "usd",
-      }),
-    });
+// // Combine `makeReservation` logic into a single function
+// exports.makeReservation = async ({ restaurantId, date, guestCount }) => {
+//   try {
+//     const response = await fetch("/api/create-payment-intent", {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify({
+//         amount: guestCount * 1000, // Example: $10 per guest
+//         currency: "usd",
+//       }),
+//     });
 
-    const { clientSecret } = await response.json();
-    return { clientSecret };
-  } catch (error) {
-    throw new Error("Error creating payment intent: " + error.message);
-  }
-};
+//     const { clientSecret } = await response.json();
+//     return { clientSecret };
+//   } catch (error) {
+//     throw new Error("Error creating payment intent: " + error.message);
+//   }
+// };
 
 exports.getReservationById = async (req, res) => {
   try {
