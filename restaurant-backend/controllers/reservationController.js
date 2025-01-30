@@ -2,15 +2,23 @@ const Reservation = require("../models/Reservation");
 
 exports.createReservation = async (req, res) => {
   try {
-    const { restaurantId, date, guestCount } = req.body; // Include guestCount
+    const { restaurantId, date, guestCount } = req.body;
     const userId = req.user.id;
+
+    // Create a payment intent with Stripe
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: guestCount * 1000, // Example: $10 per guest
+      currency: "usd",
+      automatic_payment_methods: { enabled: true },
+    });
 
     // Create a reservation
     const reservation = new Reservation({
       user: userId,
       restaurant: restaurantId,
       date: new Date(date),
-      guestCount, // Store guest count
+      guestCount,
+      paymentIntentId: paymentIntent.id,
     });
 
     await reservation.save();
@@ -21,6 +29,7 @@ exports.createReservation = async (req, res) => {
     res.status(201).json({
       message: "Reservation created successfully",
       reservation: populatedReservation,
+      clientSecret: paymentIntent.client_secret,
     });
   } catch (error) {
     res
@@ -60,5 +69,23 @@ exports.makeReservation = async ({ restaurantId, date, guestCount }) => {
     return { clientSecret };
   } catch (error) {
     throw new Error("Error creating payment intent: " + error.message);
+  }
+};
+
+exports.getReservationById = async (req, res) => {
+  try {
+    const reservation = await Reservation.findById(req.params.reservationId)
+      .populate("restaurant")
+      .populate("user");
+
+    if (!reservation) {
+      return res.status(404).json({ message: "Reservation not found" });
+    }
+
+    res.status(200).json(reservation);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching reservation", error: error.message });
   }
 };

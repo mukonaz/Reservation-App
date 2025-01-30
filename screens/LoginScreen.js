@@ -5,11 +5,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  
 
   const handleLogin = async () => {
     try {
       const response = await fetch(
-        "http://192.168.1.132:5000/api/users/login",
+        "http://192.168.1.87:5000/api/users/login",
         {
           method: "POST",
           headers: {
@@ -21,8 +22,9 @@ const LoginScreen = ({ navigation }) => {
       const data = await response.json();
       if (response.ok) {
         console.log("Login successful:", data);
-        // Store token for authenticated user in AsyncStorage
+        // Store token and role for authenticated user in AsyncStorage
         await AsyncStorage.setItem("userToken", data.token);
+        await AsyncStorage.setItem("userRole", data.user.role); // Save the role here
         // Navigate back to Home or reset navigation stack
         navigation.reset({
           index: 0,
@@ -36,6 +38,7 @@ const LoginScreen = ({ navigation }) => {
       Alert.alert("Error", "Something went wrong during login.");
     }
   };
+  
 
   return (
     <View style={styles.container}>

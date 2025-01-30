@@ -13,18 +13,21 @@ const AddRestaurantScreen = ({ navigation }) => {
       name,
       location,
       cuisine,
-      slots: slots.split(',').map(slot => new Date(slot.trim()))
+      // Convert slots to ISO string format (if backend expects this)
+      slots: slots.split(',').map(slot => new Date(slot.trim()).toISOString())
     };
-
+  
     try {
-      const response = await axios.post('http://192.168.1.132:5000/api/restaurants', restaurantData);
+      const response = await axios.post('http://192.168.1.87:5000/api/restaurants', restaurantData);
       Alert.alert("Success", "Restaurant added successfully!");
       navigation.goBack();
     } catch (error) {
+      // Check for the error response
+      console.error("Error response:", error.response);
       Alert.alert("Error", "Failed to add restaurant");
-      console.error(error);
     }
   };
+  
 
   return (
     <View style={styles.container}>

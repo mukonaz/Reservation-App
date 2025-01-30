@@ -55,12 +55,13 @@ exports.loginUser = async (req, res) => {
     res.status(200).json({ 
       message: "Login successful", 
       token,
-      user: { id: user._id, email: user.email }
+      user: { id: user._id, email: user.email, role: user.role }
     });
   } catch (error) {
     res.status(500).json({ message: "Error logging in", error: error.message });
   }
 };
+
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',

@@ -4,12 +4,12 @@ import { CardField, useStripe } from "@stripe/stripe-react-native";
 
 const PaymentScreen = () => {
   const [name, setName] = useState("");
-  const [amount, setAmount] = useState("");
+  const fixedAmount = 200; // Fixed reservation price in Rands
   const { confirmPayment } = useStripe();
 
   const handlePayment = async () => {
-    if (!name || !amount) {
-      Alert.alert("Error", "Please enter your name and amount.");
+    if (!name) {
+      Alert.alert("Error", "Please enter your name.");
       return;
     }
 
@@ -21,8 +21,8 @@ const PaymentScreen = () => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            amount: Math.round(amount * 100), // Convert to smallest currency unit
-            currency: "usd",
+            amount: Math.round(fixedAmount * 100), // Convert to smallest currency unit
+            currency: "zar", // Use ZAR for South African Rand
           }),
         }
       );
@@ -56,13 +56,9 @@ const PaymentScreen = () => {
         value={name}
         onChangeText={setName}
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Amount (USD)"
-        keyboardType="numeric"
-        value={amount}
-        onChangeText={setAmount}
-      />
+      <Text style={styles.fixedAmountText}>
+        Reservation Price: R{fixedAmount}
+      </Text>
       <CardField
         postalCodeEnabled={true}
         placeholder={{
@@ -71,7 +67,10 @@ const PaymentScreen = () => {
         cardStyle={styles.card}
         style={styles.cardContainer}
       />
-      <Button title="Pay Now" onPress={handlePayment} />
+      <Button
+        title={`Pay Now R${fixedAmount}`} // Display the amount in the button title
+        onPress={handlePayment}
+      />
     </View>
   );
 };
@@ -95,6 +94,12 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 15,
     fontSize: 16,
+  },
+  fixedAmountText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 15,
+    textAlign: "center",
   },
   card: {
     backgroundColor: "#fff",
