@@ -22,33 +22,42 @@ import ReservationListScreen from "./screens/RestaurantList";
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Home Stack
-function HomeStack() {
+// HomeStack
+function HomeStack({ isLoggedIn, setIsLoggedIn }) {
   return (
-    <Stack.Navigator initialRouteName="Home">
-      <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="Details" component={RestaurantDetailsScreen} />
-      <Stack.Screen name="ReservationForm" component={ReservationForm} />
-      <Stack.Screen name="Confirmation" component={ConfirmationScreen} />
-      <Stack.Screen name="Error" component={ErrorScreen} />
-      <Stack.Screen name="Payment" component={PaymentScreen} />
+    <Stack.Navigator initialRouteName={isLoggedIn ? "Home" : "Login"}>
+      {!isLoggedIn ? (
+        <>
+          <Stack.Screen name="Login">
+            {(props) => <LoginScreen {...props} setIsLoggedIn={setIsLoggedIn} />}
+          </Stack.Screen>
+          <Stack.Screen name="Register" component={RegistrationScreen} options={{ headerShown: false }} />
+        </>
+      ) : (
+        <>
+          <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Details" component={RestaurantDetailsScreen} />
+          <Stack.Screen name="ReservationForm" component={ReservationForm} />
+          <Stack.Screen name="Confirmation" component={ConfirmationScreen} />
+          <Stack.Screen name="Error" component={ErrorScreen} />
+          <Stack.Screen name="Payment" component={PaymentScreen} />
+        </>
+      )}
     </Stack.Navigator>
   );
 }
 
-// Auth Stack
-function AuthStack() {
+// AuthStack
+function AuthStack({ setIsLoggedIn }) {
   return (
-    <Stack.Navigator
-      initialRouteName="Login"
-      screenOptions={{ headerShown: false }}
-    >
-      <Stack.Screen name="Login" component={LoginScreen} />
+    <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Login">
+        {(props) => <LoginScreen {...props} setIsLoggedIn={setIsLoggedIn} />}
+      </Stack.Screen>
       <Stack.Screen name="Register" component={RegistrationScreen} />
     </Stack.Navigator>
   );
 }
-
 
 // Admin Stack
 function AdminStack() {
@@ -56,34 +65,27 @@ function AdminStack() {
     <Stack.Navigator initialRouteName="AdminDashboard">
       <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} options={{ title: "Admin Dashboard" }} />
       <Stack.Screen name="AddRestaurant" component={AddRestaurantScreen} options={{ title: "Add Restaurant" }} />
-      <Stack.Screen 
-        name="ReservationList" 
-        component={ReservationListScreen} 
-        options={{ title: "Reservations" }} 
-      />
+      <Stack.Screen name="ReservationList" component={ReservationListScreen} options={{ title: "Reservations" }} />
     </Stack.Navigator>
   );
 }
 
-// Custom Logout Screen
-const LogoutScreen = ({ navigation }) => {
+// Logout Screen
+const LogoutScreen = ({ navigation, setIsLoggedIn, setIsAdmin }) => {
   const handleLogout = async () => {
-    Alert.alert(
-      "Logout",
-      "Are you sure you want to log out?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Logout",
-          onPress: async () => {
-            await AsyncStorage.removeItem("userToken");
-            await AsyncStorage.removeItem("userRole");
-            navigation.reset({ index: 0, routes: [{ name: "Home" }] });
-          },
+    Alert.alert("Logout", "Are you sure you want to log out?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        onPress: async () => {
+          await AsyncStorage.removeItem("userToken");
+          await AsyncStorage.removeItem("userRole");
+          setIsLoggedIn(false);
+          setIsAdmin(false);
+          navigation.reset({ index: 0, routes: [{ name: "Home" }] });
         },
-      ],
-      { cancelable: false }
-    );
+      },
+    ]);
   };
 
   return (
@@ -104,17 +106,18 @@ export default function App() {
   useEffect(() => {
     const checkUserStatus = async () => {
       try {
+        const token = await AsyncStorage.getItem("userToken");
         const role = await AsyncStorage.getItem("userRole");
-        const token = await AsyncStorage.getItem("userToken"); // Check if a user is logged in
   
-        setIsLoggedIn(!!token); // Set logged-in state
-        setIsAdmin(role === "admin"); // Set admin status
+        setIsLoggedIn(!!token);
+        setIsAdmin(role === "admin");
       } catch (error) {
         console.error("Error fetching user status:", error);
       }
     };
+  
     checkUserStatus();
-  }, []);
+  }, [isLoggedIn]);  // Added dependency to refresh state
   
 
   return (
@@ -142,22 +145,27 @@ export default function App() {
             tabBarStyle: { backgroundColor: "#f8f8f8", height: 60 },
           })}
         >
-          <Tab.Screen name="Home" component={HomeStack} />
+          <Tab.Screen name="Home">
+            {() => <HomeStack isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />}
+          </Tab.Screen>
+
           {!isLoggedIn ? (
-            <Tab.Screen
-              name="Auth"
-              component={AuthStack}
-              options={{ title: "Login" }}
-            />
+            <Tab.Screen name="Auth">
+              {() => <AuthStack setIsLoggedIn={setIsLoggedIn} />}
+            </Tab.Screen>
           ) : (
-            <Tab.Screen
-              name="Logout"
-              component={LogoutScreen}
-              options={{ title: "Logout" }}
-            />
+            <Tab.Screen name="Logout">
+              {({ navigation }) => (
+                <LogoutScreen navigation={navigation} setIsLoggedIn={setIsLoggedIn} setIsAdmin={setIsAdmin} />
+              )}
+            </Tab.Screen>
           )}
+
           <Tab.Screen name="Profile" component={ProfileScreen} />
-          {isAdmin && <Tab.Screen name="admin" component={AdminStack} />}
+
+          {isAdmin && (
+            <Tab.Screen name="admin" component={AdminStack} options={{ title: "Admin" }} />
+          )}
         </Tab.Navigator>
       </NavigationContainer>
     </StripeProvider>

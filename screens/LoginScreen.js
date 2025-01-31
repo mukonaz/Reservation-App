@@ -2,43 +2,36 @@ import React, { useState } from "react";
 import { View, Text, TextInput, StyleSheet, Button, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const LoginScreen = ({ navigation }) => {
+const LoginScreen = ({ navigation, setIsLoggedIn }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  
 
   const handleLogin = async () => {
     try {
-      const response = await fetch(
-        "http://192.168.0.130:5000/api/users/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email, password }),
-        }
-      );
+      const response = await fetch("http://192.168.1.87:5000/api/users/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
       const data = await response.json();
+
       if (response.ok) {
         console.log("Login successful:", data);
-        // Store token and role for authenticated user in AsyncStorage
+
         await AsyncStorage.setItem("userToken", data.token);
-        await AsyncStorage.setItem("userRole", data.user.role); // Save the role here
-        // Navigate back to Home or reset navigation stack
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "Home" }],
-        });
+        await AsyncStorage.setItem("userRole", data.user.role);  // Store role
+
+        setIsLoggedIn(true);  // Update login state
+
+        navigation.reset({ index: 0, routes: [{ name: "Home" }] }); // Refresh navigation
       } else {
-        Alert.alert("Login Failed", data.message);
+        Alert.alert("Login Failed", data.message || "Invalid credentials");
       }
     } catch (error) {
-      console.error("Error during login:", error);
-      Alert.alert("Error", "Something went wrong during login.");
+      console.error("Login error:", error);
+      Alert.alert("Login Error", "Something went wrong. Please try again.");
     }
   };
-  
 
   return (
     <View style={styles.container}>

@@ -7,14 +7,20 @@ import {
   TextInput,
   Image,
   TouchableOpacity,
+  useColorScheme,
+  Appearance,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { getRestaurants } from "../services/api"; // Import the API service
+import { getRestaurants } from "../services/api";
+import { useTheme } from "@react-navigation/native"; // For dark mode support
 
 const HomeScreen = () => {
   const [restaurants, setRestaurants] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const navigation = useNavigation();
+  const colorScheme = useColorScheme(); // Detect system theme
+  const { colors } = useTheme(); // Use theme colors
 
   useEffect(() => {
     // Fetch restaurants from the backend
@@ -30,51 +36,85 @@ const HomeScreen = () => {
     fetchRestaurants();
   }, []);
 
+  // Filter restaurants based on search query
+  const filteredRestaurants = restaurants.filter((restaurant) =>
+    restaurant.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: colors.background }, // Dynamic background color
+      ]}
+    >
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Restaurants</Text>
-        <Ionicons name="restaurant" size={28} color="#fff" />
+      <View
+        style={[
+          styles.header,
+          { backgroundColor: colors.primary }, // Dynamic header color
+        ]}
+      >
+        <Text style={[styles.title, { color: colors.text }]}>Restaurants</Text>
+        <Ionicons
+          name="restaurant"
+          size={28}
+          color={colors.text} // Dynamic icon color
+        />
       </View>
 
       {/* Search Bar */}
-      <View style={styles.searchContainer}>
+      <View
+        style={[
+          styles.searchContainer,
+          { backgroundColor: colors.card }, // Dynamic search bar color
+        ]}
+      >
         <Ionicons
           name="search"
           size={20}
-          color="#888"
+          color={colors.text} // Dynamic icon color
           style={styles.searchIcon}
         />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: colors.text }]} // Dynamic text color
           placeholder="Search restaurants..."
-          placeholderTextColor="#888"
+          placeholderTextColor={colors.text} // Dynamic placeholder color
+          value={searchQuery}
+          onChangeText={setSearchQuery}
         />
       </View>
 
       {/* Restaurant List */}
       <FlatList
-        data={restaurants}
+        data={filteredRestaurants}
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
           <TouchableOpacity
             onPress={() => navigation.navigate("Details", { restaurant: item })}
           >
-            <View style={styles.card}>
+            <View
+              style={[
+                styles.card,
+                { backgroundColor: colors.card }, // Dynamic card color
+              ]}
+            >
               <Image
                 source={{ uri: "https://via.placeholder.com/100" }}
                 style={styles.image}
               />
               <View style={styles.info}>
-                <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.details}>
+                <Text style={[styles.name, { color: colors.text }]}>
+                  {item.name}
+                </Text>
+                <Text style={[styles.details, { color: colors.text }]}>
                   {item.location} • {item.cuisine}
                 </Text>
               </View>
             </View>
           </TouchableOpacity>
         )}
+        contentContainerStyle={styles.listContainer}
       />
     </View>
   );
@@ -83,24 +123,21 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#6200ee",
     padding: 20,
+    elevation: 4,
   },
   title: {
-    color: "#fff",
     fontSize: 20,
     fontWeight: "bold",
   },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
     margin: 10,
     borderRadius: 8,
     paddingHorizontal: 10,
@@ -112,11 +149,12 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: "#333",
+  },
+  listContainer: {
+    paddingBottom: 20,
   },
   card: {
     flexDirection: "row",
-    backgroundColor: "#fff",
     margin: 10,
     borderRadius: 8,
     elevation: 2,
@@ -134,11 +172,9 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#333",
   },
   details: {
     fontSize: 14,
-    color: "#666",
     marginTop: 5,
   },
 });

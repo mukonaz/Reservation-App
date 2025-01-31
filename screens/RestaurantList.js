@@ -33,7 +33,7 @@ const ReservationListScreen = () => {
         return;
       }
 
-      const response = await fetch('http://192.168.0.130:5000/api/reservations/all', {
+      const response = await fetch('http://192.168.1.87:5000/api/reservations/all', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

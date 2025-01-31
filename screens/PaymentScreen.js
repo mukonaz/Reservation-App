@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TextInput, Button, Alert } from "react-native";
 import { CardField, useStripe } from "@stripe/stripe-react-native";
+import { makeReservation } from "../services/api";
 
 const PaymentScreen = () => {
   const [name, setName] = useState("");
-  const fixedAmount = 200; // Fixed reservation price in Rands
+  const fixedAmount = 200;
   const { confirmPayment } = useStripe();
 
   const handlePayment = async () => {
@@ -14,22 +15,34 @@ const PaymentScreen = () => {
     }
 
     try {
-      // Call backend to create payment intent
+      // First make the reservation
+      const reservationData = {
+        customerName: name,
+        date: new Date(), // You should pass the actual selected date
+        guestCount: 1,   // Pass the actual guest count
+        restaurantId: "67914f38e99134aecec6f142" // Pass the actual restaurant ID
+      };
+
+      await makeReservation(reservationData);
+
+      // Then handle payment
       const response = await fetch(
-        "http://192.168.0.130/create-payment-intent",
+        "http://192.168.1.87/create-payment-intent",
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem('token')}` // Add token here too
+          },
           body: JSON.stringify({
-            amount: Math.round(fixedAmount * 100), // Convert to smallest currency unit
-            currency: "zar", // Use ZAR for South African Rand
+            amount: Math.round(fixedAmount * 100),
+            currency: "zar",
           }),
         }
       );
 
       const { clientSecret } = await response.json();
 
-      // Confirm payment with Stripe
       const { error, paymentIntent } = await confirmPayment(clientSecret, {
         paymentMethodType: "Card",
         paymentMethodData: {
@@ -46,7 +59,6 @@ const PaymentScreen = () => {
       Alert.alert("Error", error.message);
     }
   };
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Make a Payment</Text>
