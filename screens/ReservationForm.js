@@ -57,7 +57,7 @@ const ReservationForm = ({ route, navigation }) => {
       console.log('Request payload:', requestPayload);
 
       const reservationResponse = await fetch(
-        "http://192.168.1.87:5000/api/reservations/create",
+        "http://192.168.0.130:5000/api/reservations/create",
         {
           method: "POST",
           headers: {

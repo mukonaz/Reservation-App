@@ -12,7 +12,7 @@ const ConfirmationScreen = ({ route }) => {
     const fetchReservationDetails = async () => {
       try {
         const response = await fetch(
-          `http://192.168.1.87:5000/api/reservations/${reservationId}`
+          `http://192.168.0.130:5000/api/reservations/${reservationId}`
         );
         if (!response.ok) {
           throw new Error("Failed to fetch reservation details");

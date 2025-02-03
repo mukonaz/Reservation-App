@@ -3,45 +3,59 @@ const Reservation = require("../models/Reservation");
 exports.createReservation = async (req, res) => {
   try {
     const { restaurantId, date, guestCount } = req.body;
-    const userId = req.user.id;
+    const userId = req.user?.id; // Ensure req.user exists
 
-    // Calculate amount to charge based on guestCount (e.g., $10 per guest)
-    const amount = guestCount * 1000; // Example: $10 per guest in cents
+    if (!restaurantId || !date || !guestCount) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
 
-    // Create a payment intent with Stripe
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized: User ID missing" });
+    }
+
+    // Calculate payment amount
+    const amount = guestCount * 1000;
+
+    // Ensure Stripe is initialized
+    if (!stripe) {
+      throw new Error("Stripe instance is not configured.");
+    }
+
+    // Create Stripe payment intent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount, // Payment amount in cents
-      currency: "usd", // Currency code
-      automatic_payment_methods: { enabled: true }, // Automatic payment methods
+      amount,
+      currency: "usd",
+      automatic_payment_methods: { enabled: true },
     });
 
-    // Create a reservation in the database
+    // Create reservation in DB
     const reservation = new Reservation({
       user: userId,
       restaurant: restaurantId,
       date: new Date(date),
       guestCount,
-      paymentIntentId: paymentIntent.id, // Store the Stripe payment intent ID
+      paymentIntentId: paymentIntent.id,
     });
 
     await reservation.save();
 
-    // Populate restaurant details to include in the response
+    // Populate restaurant details
     const populatedReservation = await reservation.populate("restaurant");
 
-    // Return the reservation along with the clientSecret from Stripe
     res.status(201).json({
       message: "Reservation created successfully",
       reservation: populatedReservation,
-      clientSecret: paymentIntent.client_secret, // Provide the client secret for Stripe payment confirmation
+      clientSecret: paymentIntent.client_secret,
     });
   } catch (error) {
+    console.error("🔥 Error in createReservation:", error.message);
     res.status(500).json({
       message: "Error creating reservation",
       error: error.message,
     });
   }
 };
+
 
 
 exports.getUserReservations = async (req, res) => {
