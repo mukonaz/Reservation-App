@@ -1,4 +1,7 @@
 const Reservation = require("../models/Reservation");
+const User = require("../models/User");
+const Stripe = require("stripe");
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); 
 
 exports.createReservation = async (req, res) => {
   try {
@@ -15,11 +18,6 @@ exports.createReservation = async (req, res) => {
 
     // Calculate payment amount
     const amount = guestCount * 1000;
-
-    // Ensure Stripe is initialized
-    if (!stripe) {
-      throw new Error("Stripe instance is not configured.");
-    }
 
     // Create Stripe payment intent
     const paymentIntent = await stripe.paymentIntents.create({
@@ -56,41 +54,18 @@ exports.createReservation = async (req, res) => {
   }
 };
 
-
-
 exports.getUserReservations = async (req, res) => {
   try {
     const reservations = await Reservation.find({ user: req.user.id })
       .populate("restaurant")
       .sort({ date: -1 }); // Sort by most recent
+
     res.status(200).json(reservations);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching reservations", error: error.message });
+    res.status(500).json({ message: "Error fetching reservations", error: error.message });
   }
 };
 
-// // Combine `makeReservation` logic into a single function
-// exports.makeReservation = async ({ restaurantId, date, guestCount }) => {
-//   try {
-//     const response = await fetch("/api/create-payment-intent", {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//       },
-//       body: JSON.stringify({
-//         amount: guestCount * 1000, // Example: $10 per guest
-//         currency: "usd",
-//       }),
-//     });
-
-//     const { clientSecret } = await response.json();
-//     return { clientSecret };
-//   } catch (error) {
-//     throw new Error("Error creating payment intent: " + error.message);
-//   }
-// };
 
 exports.getReservationById = async (req, res) => {
   try {
@@ -102,10 +77,15 @@ exports.getReservationById = async (req, res) => {
       return res.status(404).json({ message: "Reservation not found" });
     }
 
+    if (reservation.user._id.toString() !== req.user.id) {
+      const user = await User.findById(req.user.id);
+      if (user.role !== "admin" && user.role !== "restaurant_admin") {
+        return res.status(403).json({ message: "Access denied" });
+      }
+    }
+
     res.status(200).json(reservation);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching reservation", error: error.message });
+    res.status(500).json({ message: "Error fetching reservation", error: error.message });
   }
 };

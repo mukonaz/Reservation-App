@@ -21,7 +21,7 @@ const ProfileScreen = ({ navigation }) => {
         return;
       }
 
-      const response = await fetch("http://192.168.1.94:5000/api/users/profile", {
+      const response = await fetch("http://192.168.0.130:5000/api/users/profile", {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       });

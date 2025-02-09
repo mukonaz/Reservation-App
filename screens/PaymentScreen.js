@@ -27,7 +27,7 @@ const PaymentScreen = () => {
 
       // Then handle payment
       const response = await fetch(
-        "http://192.168.1.94/create-payment-intent",
+        "http://192.168.0.130/create-payment-intent",
         {
           method: "POST",
           headers: {

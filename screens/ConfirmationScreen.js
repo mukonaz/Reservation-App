@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/MaterialIcons";
 
 const ConfirmationScreen = ({ route }) => {
@@ -11,15 +12,33 @@ const ConfirmationScreen = ({ route }) => {
   useEffect(() => {
     const fetchReservationDetails = async () => {
       try {
-        const response = await fetch(
-          `http://192.168.1.94:5000/api/reservations/${reservationId}`
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch reservation details");
+        const token = await AsyncStorage.getItem("authToken");
+        if (!token) {
+          throw new Error("No authentication token found");
         }
+
+        console.log("Sending Token:", token); // Debugging log
+
+        const response = await fetch(
+          `http://192.168.0.130:5000/api/reservations/${reservationId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP Error ${response.status}: ${errorText}`);
+        }
+
         const data = await response.json();
         setReservation(data);
       } catch (err) {
+        console.error("Fetch error:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -49,15 +68,9 @@ const ConfirmationScreen = ({ route }) => {
     <View style={styles.container}>
       <Icon name="check-circle" size={50} color="green" />
       <Text style={styles.title}>Reservation Confirmed!</Text>
-      <Text style={styles.detail}>
-        Restaurant: {reservation.restaurant.name}
-      </Text>
-      <Text style={styles.detail}>
-        Date: {new Date(reservation.date).toLocaleString()}
-      </Text>
-      <Text style={styles.detail}>
-        Reservation Number: {reservation.paymentIntentId}
-      </Text>
+      <Text style={styles.detail}>Restaurant: {reservation.restaurant.name}</Text>
+      <Text style={styles.detail}>Date: {new Date(reservation.date).toLocaleString()}</Text>
+      <Text style={styles.detail}>Reservation Number: {reservation.paymentIntentId}</Text>
       <Text style={styles.detail}>Guest Count: {reservation.guestCount}</Text>
     </View>
   );

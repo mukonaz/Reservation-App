@@ -44,7 +44,7 @@ const ReservationForm = ({ route, navigation }) => {
     try {
       setLoading(true);
       const response = await axios.post(
-        "http://192.168.1.94:5000/api/create-payment-intent",
+        "http://192.168.0.130:5000/api/create-payment-intent",
         {
           amount: 1000,
           currency: "zar",

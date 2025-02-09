@@ -50,7 +50,7 @@ const AddRestaurantScreen = ({ navigation }) => {
 
       console.log('Sending restaurant data:', restaurantData);
 
-      const response = await fetch('http://192.168.1.94:5000/api/restaurants', {
+      const response = await fetch('http://192.168.0.130:5000/api/restaurants', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
